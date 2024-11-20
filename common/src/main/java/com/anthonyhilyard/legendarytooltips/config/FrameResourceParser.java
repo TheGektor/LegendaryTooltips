@@ -42,6 +42,14 @@ public final class FrameResourceParser implements ResourceManagerReloadListener
 		// 		{
 		// 			"image": "legendarytooltips:textures/gui/tooltip_borders.png",	// optional, defaults to standard or resource-pack defined frame texture
 		// 			"index": 0,														// optional, defaults to 0
+		//			"sizes": {														// optional
+		//				"borderSize": 64,											// optional, defaults to 64
+		//				"partSize": 8												// optional, defaults to 8
+		//			},
+		//			"offsets": {													// optional
+		//				"partOffset": 1,											// optional, defaults to 1
+		//				"cornerOffset": 2											// optional, defaults to 2
+		//			},
 		// 			"startColor": "",												// optional, defaults to #FF996922 also accepts integer color
 		// 			"endColor": "",													// optional, defaults to #FF5A3A1D also accepts integer color
 		// 			"bgColor": "",													// optional, mutually exclusive with bgStart/bgEnd colors
@@ -80,6 +88,10 @@ public final class FrameResourceParser implements ResourceManagerReloadListener
 							ResourceLocation image = TooltipDecor.DEFAULT_BORDERS;
 							int index = 0;
 							int priority = 0;
+							int borderSize = 64;
+							int partSize = 8;
+							int partOffset = 1;
+							int cornerOffset = 2;
 							Map<String, TextColor> colors = new HashMap<String, TextColor>() {{
 								put("startColor", LegendaryTooltipsConfig.defaultColors.get(ColorType.BORDER_START));
 								put("endColor", LegendaryTooltipsConfig.defaultColors.get(ColorType.BORDER_END));
@@ -103,6 +115,24 @@ public final class FrameResourceParser implements ResourceManagerReloadListener
 								if (imageResourceLocation != null)
 								{
 									image = imageResourceLocation;
+								}
+							}
+							if (definitionObject.has("sizes")) {
+								JsonObject sizes = GsonHelper.getAsJsonObject(definitionObject, "sizes");
+								if (sizes.has("borderSize")) {
+									borderSize = sizes.get("borderSize").getAsInt();
+								}
+								if (sizes.has("partSize")) {
+									partSize = sizes.get("partSize").getAsInt();
+								}
+							}
+							if (definitionObject.has("offsets")) {
+								JsonObject offsets = GsonHelper.getAsJsonObject(definitionObject, "offsets");
+								if (offsets.has("partOffset")) {
+									partOffset = offsets.get("partOffset").getAsInt();
+								}
+								if (offsets.has("cornerOffset")) {
+									cornerOffset = offsets.get("cornerOffset").getAsInt();
 								}
 							}
 							if (definitionObject.has("index")) { index = GsonHelper.getAsInt(definitionObject, "index"); }
@@ -153,7 +183,7 @@ public final class FrameResourceParser implements ResourceManagerReloadListener
 								() -> colors.get("endColor").getValue(),
 								() -> colors.get("bgStartColor") != null ? colors.get("bgStartColor").getValue() : colors.get("bgColor").getValue(),
 								() -> colors.get("bgEndColor") != null ? colors.get("bgEndColor").getValue() : colors.get("bgColor").getValue(),
-								FrameSource.DATA, priority);
+								FrameSource.DATA, priority, borderSize, partSize, partOffset, cornerOffset);
 							LegendaryTooltipsConfig.getInstance().addFrameDefinition(definition, selectors);
 						}
 					}

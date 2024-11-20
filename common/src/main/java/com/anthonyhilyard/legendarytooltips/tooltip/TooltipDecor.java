@@ -233,31 +233,37 @@ public class TooltipDecor
 		int textureHeight = GlStateManager._getTexLevelParameter(GL11.GL_TEXTURE_2D, 0, GL11.GL_TEXTURE_HEIGHT);
 
 		final int frameIndex = frameDefinition.index();
+		final int borderSize = frameDefinition.borderSize();
+		final int partSize = frameDefinition.partSize();
+		final int partOffset = frameDefinition.partOffset();
+		final int cornerOffset = frameDefinition.cornerOffset();
+		final int borderHeight = partSize * 2;
+		final int partWidth = borderSize - partSize * 2;
 
 		// Here we will overlay a 6-patch border over the tooltip to make it look fancy.
 		poseStack.pushPose();
 		poseStack.translate(0, 0, 410.0);
 
 		// Render top-left corner.
-		GuiHelper.blit(poseStack, x - 6, y - 6, 8, 8, (frameIndex / 8) * 64, (frameIndex * 16) % textureHeight, 8, 8, textureWidth, textureHeight);
+		GuiHelper.blit(poseStack, x - partSize + cornerOffset, y - partSize + cornerOffset, partSize, partSize, (frameIndex / 8) * borderSize, (frameIndex * borderHeight) % textureHeight, partSize, partSize, textureWidth, textureHeight);
 
 		// Render top-right corner.
-		GuiHelper.blit(poseStack, x + width - 8 + 6, y - 6, 8, 8, 56 + (frameIndex / 8) * 64, (frameIndex * 16) % textureHeight, 8, 8, textureWidth, textureHeight);
+		GuiHelper.blit(poseStack, x + width - cornerOffset, y - partSize + cornerOffset, partSize, partSize, (borderSize - partSize) + (frameIndex / 8) * borderSize, (frameIndex * borderHeight) % textureHeight, partSize, partSize, textureWidth, textureHeight);
 
 		// Render bottom-left corner.
-		GuiHelper.blit(poseStack, x - 6, y + height - 8 + 6, 8, 8, (frameIndex / 8) * 64, (frameIndex * 16) % textureHeight + 8, 8, 8, textureWidth, textureHeight);
+		GuiHelper.blit(poseStack, x - partSize + cornerOffset, y + height - cornerOffset, partSize, partSize, (frameIndex / 8) * borderSize, (frameIndex * borderHeight) % textureHeight + partSize, partSize, partSize, textureWidth, textureHeight);
 
 		// Render bottom-right corner.
-		GuiHelper.blit(poseStack, x + width - 8 + 6, y + height - 8 + 6, 8, 8, 56 + (frameIndex / 8) * 64, (frameIndex * 16) % textureHeight + 8, 8, 8, textureWidth, textureHeight);
+		GuiHelper.blit(poseStack, x + width - cornerOffset, y + height - cornerOffset, partSize, partSize, (borderSize - partSize) + (frameIndex / 8) * borderSize, (frameIndex * borderHeight) % textureHeight + partSize, partSize, partSize, textureWidth, textureHeight);
 
 		// Only render central embellishments if the tooltip is 48 pixels wide or more.
-		if (width >= 48)
+		if (width >= partWidth)
 		{
 			// Render top central embellishment.
-			GuiHelper.blit(poseStack, x + (width / 2) - 24, y - 9, 48, 8, 8 + (frameIndex / 8) * 64, (frameIndex * 16) % textureHeight, 48, 8, textureWidth, textureHeight);
+			GuiHelper.blit(poseStack, x + (width / 2) - (partWidth / 2), y - partSize - partOffset, partWidth, partSize, partSize + (frameIndex / 8) * borderSize, (frameIndex * borderHeight) % textureHeight, partWidth, partSize, textureWidth, textureHeight);
 
 			// Render bottom central embellishment.
-			GuiHelper.blit(poseStack, x + (width / 2) - 24, y + height - 8 + 9, 48, 8, 8 + (frameIndex / 8) * 64, (frameIndex * 16) % textureHeight + 8, 48, 8, textureWidth, textureHeight);
+			GuiHelper.blit(poseStack, x + (width / 2) - (partWidth / 2), y + height + partOffset, partWidth, partSize, partSize + (frameIndex / 8) * borderSize, (frameIndex * borderHeight) % textureHeight + partSize, partWidth, partSize, textureWidth, textureHeight);
 		}
 
 		poseStack.popPose();
