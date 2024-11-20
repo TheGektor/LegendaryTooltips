@@ -59,9 +59,10 @@ public class LegendaryTooltipsConfig extends IcebergConfig<LegendaryTooltipsConf
 		BG_END
 	}
 
-	public record FrameDefinition(ResourceLocation resource, int index, Supplier<Integer> startBorder, Supplier<Integer> endBorder, Supplier<Integer> startBackground, Supplier<Integer> endBackground, FrameSource source, int priority, int borderSize, int partSize, int partOffset, int cornerOffset) {};
-	private static final FrameDefinition STANDARD_BORDER = new FrameDefinition(null, LegendaryTooltips.STANDARD, null, null, null, null, FrameSource.NONE, 0, 64, 8, 1, 2);
-	private static final FrameDefinition NO_BORDER = new FrameDefinition(null, LegendaryTooltips.NO_BORDER, null, null, null, null, FrameSource.NONE, 0, 0, 0, 0, 0);
+	public static final int DEFAULT_BORDER_SIZE = 64;
+	public static final int DEFAULT_PART_SIZE = 8;
+	public static final int DEFAULT_PART_OFFSET = 1;
+	public static final int DEFAULT_CORNER_OFFSET = 2;
 
 	public static final Map<ColorType, TextColor> defaultColors = Map.of(
 		ColorType.BORDER_START, TextColor.fromRgb(0xFF996922),
@@ -69,6 +70,10 @@ public class LegendaryTooltipsConfig extends IcebergConfig<LegendaryTooltipsConf
 		ColorType.BG_START, TextColor.fromRgb(0xF0160A00),
 		ColorType.BG_END, TextColor.fromRgb(0xE8160A00)
 	);
+
+	public record FrameDefinition(ResourceLocation resource, int index, Supplier<Integer> startBorder, Supplier<Integer> endBorder, Supplier<Integer> startBackground, Supplier<Integer> endBackground, FrameSource source, int priority, int borderSize, int partSize, int partOffset, int cornerOffset) {};
+	private static final FrameDefinition STANDARD_BORDER = new FrameDefinition(null, LegendaryTooltips.STANDARD, null, null, null, null, FrameSource.NONE, 0, DEFAULT_BORDER_SIZE, DEFAULT_PART_SIZE, DEFAULT_PART_OFFSET, DEFAULT_CORNER_OFFSET);
+	private static final FrameDefinition NO_BORDER = new FrameDefinition(null, LegendaryTooltips.NO_BORDER, null, null, null, null, FrameSource.NONE, 0, 0, 0, 0, 0);
 
 	public enum ModelRenderType
 	{
@@ -403,15 +408,21 @@ public class LegendaryTooltipsConfig extends IcebergConfig<LegendaryTooltipsConf
 	 * Adds a new custom frame definition.  If the same frame definition already exists, 
 	 * the provided selectors are added after the already-configured selectors.
 	 */
+	public void addFrameDefinition(ResourceLocation resource, int index, Supplier<Integer> startBorder, Supplier<Integer> endBorder, Supplier<Integer> background, int priority, List<String> selectors)
+	{
+		addFrameDefinition(resource, index, startBorder, endBorder, background, background, priority, selectors, DEFAULT_BORDER_SIZE, DEFAULT_PART_SIZE, DEFAULT_PART_OFFSET, DEFAULT_CORNER_OFFSET);
+	}
+
+	public void addFrameDefinition(ResourceLocation resource, int index, Supplier<Integer> startBorder, Supplier<Integer> endBorder, Supplier<Integer> startBackground, Supplier<Integer> endBackground, int priority, List<String> selectors)
+	{
+		addFrameDefinition(resource, index, startBorder, endBorder, startBackground, endBackground, priority, selectors, DEFAULT_BORDER_SIZE, DEFAULT_PART_SIZE, DEFAULT_PART_OFFSET, DEFAULT_CORNER_OFFSET);
+	}
+
 	public void addFrameDefinition(ResourceLocation resource, int index, Supplier<Integer> startBorder, Supplier<Integer> endBorder, Supplier<Integer> background, int priority, List<String> selectors, int borderSize, int partSize, int partOffset, int cornerOffset)
 	{
 		addFrameDefinition(resource, index, startBorder, endBorder, background, background, priority, selectors, borderSize, partSize, partOffset, cornerOffset);
 	}
 
-	/**
-	 * Adds a new custom frame definition.  If the same frame definition already exists, 
-	 * the provided selectors are added after the already-configured selectors.
-	 */
 	public void addFrameDefinition(ResourceLocation resource, int index, Supplier<Integer> startBorder, Supplier<Integer> endBorder, Supplier<Integer> startBackground, Supplier<Integer> endBackground, int priority, List<String> selectors, int borderSize, int partSize, int partOffset, int cornerOffset)
 	{
 		FrameDefinition definition = new FrameDefinition(resource, index, startBorder, endBorder, startBackground, endBackground, FrameSource.API, priority, borderSize, partSize, partOffset, cornerOffset);
@@ -493,7 +504,7 @@ public class LegendaryTooltipsConfig extends IcebergConfig<LegendaryTooltipsConf
 					if (Selectors.itemMatches(item, entry, provider))
 					{
 						// Add to cache.
-						FrameDefinition frameDefinition = new FrameDefinition(TooltipDecor.DEFAULT_BORDERS, frameIndex, () -> startColor.getValue(), () -> endColor.getValue(), () -> startBGColor.getValue(), () -> endBGColor.getValue(), FrameSource.CONFIG, i, 64, 8, 1, 2);
+						FrameDefinition frameDefinition = new FrameDefinition(TooltipDecor.DEFAULT_BORDERS, frameIndex, () -> startColor.getValue(), () -> endColor.getValue(), () -> startBGColor.getValue(), () -> endBGColor.getValue(), FrameSource.CONFIG, i, DEFAULT_BORDER_SIZE, DEFAULT_PART_SIZE, DEFAULT_PART_OFFSET, DEFAULT_CORNER_OFFSET);
 						frameDefinitionCache.put(item, frameDefinition);
 						return frameDefinition;
 					}

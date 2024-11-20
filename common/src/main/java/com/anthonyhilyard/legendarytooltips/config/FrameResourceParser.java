@@ -88,10 +88,11 @@ public final class FrameResourceParser implements ResourceManagerReloadListener
 							ResourceLocation image = TooltipDecor.DEFAULT_BORDERS;
 							int index = 0;
 							int priority = 0;
-							int borderSize = 64;
-							int partSize = 8;
-							int partOffset = 1;
-							int cornerOffset = 2;
+							int borderSize = LegendaryTooltipsConfig.DEFAULT_BORDER_SIZE;
+							int partSize = LegendaryTooltipsConfig.DEFAULT_PART_SIZE;
+							int partOffset = LegendaryTooltipsConfig.DEFAULT_PART_OFFSET;
+							int cornerOffset = LegendaryTooltipsConfig.DEFAULT_CORNER_OFFSET;
+
 							Map<String, TextColor> colors = new HashMap<String, TextColor>() {{
 								put("startColor", LegendaryTooltipsConfig.defaultColors.get(ColorType.BORDER_START));
 								put("endColor", LegendaryTooltipsConfig.defaultColors.get(ColorType.BORDER_END));
@@ -117,21 +118,27 @@ public final class FrameResourceParser implements ResourceManagerReloadListener
 									image = imageResourceLocation;
 								}
 							}
-							if (definitionObject.has("sizes")) {
+							if (definitionObject.has("sizes"))
+							{
 								JsonObject sizes = GsonHelper.getAsJsonObject(definitionObject, "sizes");
-								if (sizes.has("borderSize")) {
+								if (sizes.has("borderSize"))
+								{
 									borderSize = sizes.get("borderSize").getAsInt();
 								}
-								if (sizes.has("partSize")) {
+								if (sizes.has("partSize"))
+								{
 									partSize = sizes.get("partSize").getAsInt();
 								}
 							}
-							if (definitionObject.has("offsets")) {
+							if (definitionObject.has("offsets"))
+							{
 								JsonObject offsets = GsonHelper.getAsJsonObject(definitionObject, "offsets");
-								if (offsets.has("partOffset")) {
+								if (offsets.has("partOffset"))
+								{
 									partOffset = offsets.get("partOffset").getAsInt();
 								}
-								if (offsets.has("cornerOffset")) {
+								if (offsets.has("cornerOffset"))
+								{
 									cornerOffset = offsets.get("cornerOffset").getAsInt();
 								}
 							}
