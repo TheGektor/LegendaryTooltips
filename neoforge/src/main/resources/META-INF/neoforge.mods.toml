@@ -15,14 +15,14 @@ description='''Gives rare items a fancy tooltip and adds additional tooltip conf
 [[dependencies.legendarytooltips]]
 	modId="neoforge"
 	type="required"
-	versionRange="[21,)"
+	versionRange="[21.1.60,)"
 	ordering="NONE"
 	side="BOTH"
 
 [[dependencies.legendarytooltips]]
 	modId="minecraft"
 	type="required"
-	versionRange="[1.21,)"
+	versionRange="[1.21.1]"
 	ordering="NONE"
 	side="BOTH"
 
@@ -49,3 +49,6 @@ description='''Gives rare items a fancy tooltip and adds additional tooltip conf
 
 [[mixins]]
 	config="legendarytooltips.mixins.json"
+
+[[mixins]]
+	config="legendarytooltips.neoforge.mixins.json"
