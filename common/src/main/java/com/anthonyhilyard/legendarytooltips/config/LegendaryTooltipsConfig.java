@@ -111,6 +111,11 @@ public class LegendaryTooltipsConfig extends IcebergConfig<LegendaryTooltipsConf
 
 	private static final List<Supplier<Supplier<?>>> colorSuppliers = new ArrayList<>();
 
+	private static final List<String> defaultBlacklist = List.of(
+		"relics:reflection_necklace", "relics:aqua_walker", "relics:holy_locket", "relics:spore_sack", "relics:shadow_glaive",
+		"relics:infinity_ham", "relics:leafy_ring", "relics:phantom_boot", "relics:springy_boot"
+	);
+
 	public LegendaryTooltipsConfig(IIcebergConfigSpecBuilder build)
 	{
 		build.comment(" Legendary Tooltips Configuration Instructions\n\n" +
@@ -179,7 +184,7 @@ public class LegendaryTooltipsConfig extends IcebergConfig<LegendaryTooltipsConf
 		{
 			itemSelectors.add(build.addListAllowEmpty(String.format("level%d_entries", i), Lists.newArrayList(), e -> Selectors.validateSelector((String)e) ));
 		}
-		blacklist = build.comment(" Enter blacklist selectors here using the same format as above. Any items that match these selectors will NOT show a border.").addListAllowEmpty("blacklist", Arrays.asList(), e -> Selectors.validateSelector((String)e));
+		blacklist = build.comment(" Enter blacklist selectors here using the same format as above. Any items that match these selectors will NOT show a border.").addListAllowEmpty("blacklist", defaultBlacklist, e -> Selectors.validateSelector((String)e));
 
 		build.pop().comment(" Set border priorities here.  This should be a list of numbers that correspond to border levels, with numbers coming first being higher priority.\n" +
 							" Optionally, -1 can be inserted to indicate relative priority of data and api-defined borders.  If you don't know what that means, you don't need to worry about it.").push("priorities");

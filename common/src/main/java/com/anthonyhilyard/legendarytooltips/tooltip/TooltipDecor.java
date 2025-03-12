@@ -88,8 +88,8 @@ public class TooltipDecor
 	{
 		poseStack.pushPose();
 		Matrix4f matrix = poseStack.last().pose();
-		GuiHelper.drawGradientRectHorizontal(matrix, 402, x, y, x + width / 2, y + 1, color & 0xFFFFFF, color);
-		GuiHelper.drawGradientRectHorizontal(matrix, 402, x + width / 2, y, x + width, y + 1, color, color & 0xFFFFFF);
+		GuiHelper.drawGradientRectHorizontal(matrix, 400, x, y, x + width / 2, y + 1, color & 0xFFFFFF, color);
+		GuiHelper.drawGradientRectHorizontal(matrix, 400, x + width / 2, y, x + width, y + 1, color, color & 0xFFFFFF);
 		poseStack.popPose();
 	}
 
@@ -138,7 +138,7 @@ public class TooltipDecor
 				int titleStart = 0;
 
 				// If we are displaying a model, adjust the offset for it.
-				if (LegendaryTooltipsConfig.showModelForItem(item))
+				if (components.get(0) instanceof ItemModelComponent)
 				{
 					offset += 7;
 				}
@@ -201,8 +201,8 @@ public class TooltipDecor
 				int horizontalMin = x - 3;
 				int horizontalMax = x + width + 3;
 				int horizontalInterval = (int)Mth.lerp(interval * interval, horizontalMax, horizontalMin);
-				GuiHelper.drawGradientRectHorizontal(matrix, 402, Math.max(horizontalInterval - 36, horizontalMin), y - 3, Math.min(horizontalInterval, horizontalMax), y - 3 + 1, 0x00FFFFFF, 0x00FFFFFF | alpha);
-				GuiHelper.drawGradientRectHorizontal(matrix, 402, Math.max(horizontalInterval, horizontalMin), y - 3, Math.min(horizontalInterval + 36, horizontalMax), y - 3 + 1, 0x00FFFFFF | alpha, 0x00FFFFFF);
+				GuiHelper.drawGradientRectHorizontal(matrix, 400, Math.max(horizontalInterval - 36, horizontalMin), y - 3, Math.min(horizontalInterval, horizontalMax), y - 3 + 1, 0x00FFFFFF, 0x00FFFFFF | alpha);
+				GuiHelper.drawGradientRectHorizontal(matrix, 400, Math.max(horizontalInterval, horizontalMin), y - 3, Math.min(horizontalInterval + 36, horizontalMax), y - 3 + 1, 0x00FFFFFF | alpha, 0x00FFFFFF);
 			}
 
 			if (shineTimer <= 1.0f)
@@ -213,8 +213,8 @@ public class TooltipDecor
 				int verticalMin = y - 3 + 1;
 				int verticalMax = y + height + 3 - 1;
 				int verticalInterval = (int)Mth.lerp(interval * interval, verticalMax, verticalMin);
-				GuiHelper.drawGradientRect(matrix, 402, x - 3, Math.max(verticalInterval - 12, verticalMin), x - 3 + 1, Math.min(verticalInterval, verticalMax), 0x00FFFFFF, 0x00FFFFFF | alpha);
-				GuiHelper.drawGradientRect(matrix, 402, x - 3, Math.max(verticalInterval, verticalMin), x - 3 + 1, Math.min(verticalInterval + 12, verticalMax), 0x00FFFFFF | alpha, 0x00FFFFFF);
+				GuiHelper.drawGradientRect(matrix, 400, x - 3, Math.max(verticalInterval - 12, verticalMin), x - 3 + 1, Math.min(verticalInterval, verticalMax), 0x00FFFFFF, 0x00FFFFFF | alpha);
+				GuiHelper.drawGradientRect(matrix, 400, x - 3, Math.max(verticalInterval, verticalMin), x - 3 + 1, Math.min(verticalInterval + 12, verticalMax), 0x00FFFFFF | alpha, 0x00FFFFFF);
 			}
 			
 			poseStack.popPose();
@@ -242,7 +242,7 @@ public class TooltipDecor
 
 		// Here we will overlay a 6-patch border over the tooltip to make it look fancy.
 		poseStack.pushPose();
-		poseStack.translate(0, 0, 410.0);
+		poseStack.translate(0, 0, 400.0);
 
 		// Render top-left corner.
 		GuiHelper.blit(poseStack, x - partSize + cornerOffset, y - partSize + cornerOffset, partSize, partSize, (frameIndex / 8) * frameWidth, (frameIndex * frameHeight) % textureHeight, partSize, partSize, textureWidth, textureHeight);

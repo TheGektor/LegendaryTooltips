@@ -3,3 +3,4 @@ accessible		field		net/minecraft/client/gui/screens/inventory/AbstractContainerS
 accessible		field		net/minecraft/client/gui/screens/Screen	font	Lnet/minecraft/client/gui/Font;
 accessible		field		net/minecraft/client/renderer/entity/ItemRenderer	blockEntityRenderer	Lnet/minecraft/client/renderer/BlockEntityWithoutLevelRenderer;
 accessible		field		net/minecraft/client/Minecraft	itemColors	Lnet/minecraft/client/color/item/ItemColors;
+accessible		field		net/minecraft/client/gui/screens/inventory/tooltip/ClientTextTooltip text Lnet/minecraft/util/FormattedCharSequence;

@@ -245,15 +245,17 @@ public class LegendaryTooltips
 		return result;
 	}
 
-	public static void onPostTooltipEvent(ItemStack itemStack, GuiGraphics graphics, int x, int y, Font font, int width, int height, List<ClientTooltipComponent> components, boolean comparison, int index)
+	public static void onPostTooltipEvent(ItemStack stack, GuiGraphics graphics, int x, int y, Font font, int width, int height, List<ClientTooltipComponent> components, boolean comparison, int index)
 	{
+		LegendaryTooltips.LOGGER.info("postTooltipEvent for " + stack.getHoverName().getString());
+
 		Minecraft minecraft = Minecraft.getInstance();
-		if (minecraft.level == null || minecraft.level.registryAccess() == null)
+		if (minecraft.level == null || minecraft.level.registryAccess() == null || stack.isEmpty())
 		{
 			return;
 		}
 
-		FrameDefinition frameDefinition = LegendaryTooltipsConfig.getInstance().getFrameDefinition(itemStack, minecraft.level.registryAccess());
+		FrameDefinition frameDefinition = LegendaryTooltipsConfig.getInstance().getFrameDefinition(stack, minecraft.level.registryAccess());
 
 		if (frameDefinition.index() == NO_BORDER)
 		{
@@ -278,11 +280,11 @@ public class LegendaryTooltips
 		// If this item has a defined border, draw it.
 		if (comparison)
 		{
-			TooltipDecor.drawBorder(poseStack, x, y - 11, width, height + 11, itemStack, components, font, frameDefinition, comparison, index);
+			TooltipDecor.drawBorder(poseStack, x, y - 11, width, height + 11, stack, components, font, frameDefinition, comparison, index);
 		}
 		else
 		{
-			TooltipDecor.drawBorder(poseStack, x, y, width, height, itemStack, components, font, frameDefinition, comparison, index);
+			TooltipDecor.drawBorder(poseStack, x, y, width, height, stack, components, font, frameDefinition, comparison, index);
 		}
 	}
 }
