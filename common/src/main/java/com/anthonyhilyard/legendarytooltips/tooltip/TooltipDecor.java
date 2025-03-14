@@ -135,22 +135,14 @@ public class TooltipDecor
 			if (titleLines < numComponents)
 			{
 				int offset = 0;
-				int titleStart = 0;
+
+				// Find the index of the first text component, which is where the actual title will start.
+				int titleStart = Tooltips.calculateTitleStart(components);
 
 				// If we are displaying a model, adjust the offset for it.
 				if (components.get(0) instanceof ItemModelComponent)
 				{
 					offset += 7;
-				}
-
-				// Find the index of the first text component, which is where the actual title will start.
-				for (int i = 0; i < components.size(); i++)
-				{
-					if (components.get(i) instanceof ClientTextTooltip)
-					{
-						titleStart = i;
-						break;
-					}
 				}
 
 				// Calculate the offset, which is the height of all components before the title plus the height of all title lines.

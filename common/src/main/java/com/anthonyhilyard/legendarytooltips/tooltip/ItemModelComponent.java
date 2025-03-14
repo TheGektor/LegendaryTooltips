@@ -17,7 +17,6 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipComponent;
@@ -57,8 +56,7 @@ public class ItemModelComponent implements TooltipComponent, ClientTooltipCompon
 
 		if (customItemRenderer == null)
 		{
-			Minecraft minecraft = Minecraft.getInstance();
-			customItemRenderer = new CustomItemRenderer(minecraft.getTextureManager(), minecraft.getModelManager(), minecraft.itemColors, minecraft.getItemRenderer().blockEntityRenderer, minecraft);
+			customItemRenderer = CustomItemRenderer.getInstance();
 		}
 	}
 

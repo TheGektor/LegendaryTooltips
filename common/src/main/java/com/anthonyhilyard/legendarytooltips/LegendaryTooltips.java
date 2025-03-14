@@ -247,8 +247,6 @@ public class LegendaryTooltips
 
 	public static void onPostTooltipEvent(ItemStack stack, GuiGraphics graphics, int x, int y, Font font, int width, int height, List<ClientTooltipComponent> components, boolean comparison, int index)
 	{
-		LegendaryTooltips.LOGGER.info("postTooltipEvent for " + stack.getHoverName().getString());
-
 		Minecraft minecraft = Minecraft.getInstance();
 		if (minecraft.level == null || minecraft.level.registryAccess() == null || stack.isEmpty())
 		{
