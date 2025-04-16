@@ -36,7 +36,7 @@ public class AttributeUtilMixin
 	{
 		if (LegendaryTooltipsConfig.getInstance().fixMC271840.get() && holder.value().getBaseId() == Item.BASE_ATTACK_DAMAGE_ID)
 		{
-			float f = (float)player.getAttributeValue(Attributes.ATTACK_DAMAGE);
+			float f = (float)player.getAttributeBaseValue(Attributes.ATTACK_DAMAGE);
 			ItemEnchantments itemEnchantments = (ItemEnchantments)stack.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY);
 			for (var entry : itemEnchantments.entrySet())
 			{

@@ -1,5 +1,6 @@
 package com.anthonyhilyard.legendarytooltips.config;
 
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -8,17 +9,22 @@ import java.util.Set;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+
+import org.apache.commons.lang3.exception.ExceptionUtils;
+
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 
 import com.anthonyhilyard.iceberg.config.IcebergConfig;
 import com.anthonyhilyard.iceberg.services.IIcebergConfigSpecBuilder;
+import com.anthonyhilyard.iceberg.services.Services;
 import com.anthonyhilyard.iceberg.util.Selectors;
 import com.anthonyhilyard.iceberg.util.Selectors.SelectorDocumentation;
 import com.anthonyhilyard.iceberg.util.StringRecomposer;
 import com.anthonyhilyard.legendarytooltips.LegendaryTooltips;
 import com.anthonyhilyard.legendarytooltips.tooltip.TooltipDecor;
+import com.anthonyhilyard.prism.item.ItemColors;
 import com.anthonyhilyard.prism.text.DynamicColor;
 import com.anthonyhilyard.prism.util.ConfigHelper;
 import com.anthonyhilyard.prism.util.IColor;
@@ -26,17 +32,23 @@ import com.anthonyhilyard.prism.util.ImageAnalysis;
 import com.anthonyhilyard.prism.util.ConfigHelper.ColorFormatDocumentation;
 import com.google.common.collect.Lists;
 
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipComponent;
+import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.Rect2i;
 import net.minecraft.core.HolderLookup;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.locale.Language;
 import net.minecraft.network.chat.FormattedText;
 import net.minecraft.network.chat.Style;
 import net.minecraft.network.chat.TextColor;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.tags.TagKey;
 import net.minecraft.util.FormattedCharSequence;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 
 public class LegendaryTooltipsConfig extends IcebergConfig<LegendaryTooltipsConfig>
@@ -72,8 +84,8 @@ public class LegendaryTooltipsConfig extends IcebergConfig<LegendaryTooltipsConf
 	);
 
 	public record FrameDefinition(ResourceLocation resource, int index, Supplier<Integer> startBorder, Supplier<Integer> endBorder, Supplier<Integer> startBackground, Supplier<Integer> endBackground, FrameSource source, int priority, int frameWidth, int partSize, int partOffset, int cornerOffset) {};
-	private static final FrameDefinition STANDARD_BORDER = new FrameDefinition(null, LegendaryTooltips.STANDARD, null, null, null, null, FrameSource.NONE, 0, DEFAULT_FRAME_WIDTH, DEFAULT_PART_SIZE, DEFAULT_PART_OFFSET, DEFAULT_CORNER_OFFSET);
-	private static final FrameDefinition NO_BORDER = new FrameDefinition(null, LegendaryTooltips.NO_BORDER, null, null, null, null, FrameSource.NONE, 0, 0, 0, 0, 0);
+	public static final FrameDefinition STANDARD_BORDER = new FrameDefinition(null, -1, null, null, null, null, FrameSource.NONE, 0, DEFAULT_FRAME_WIDTH, DEFAULT_PART_SIZE, DEFAULT_PART_OFFSET, DEFAULT_CORNER_OFFSET);
+	public static final FrameDefinition NO_BORDER = new FrameDefinition(null, -2, null, null, null, null, FrameSource.NONE, 0, 0, 0, 0, 0);
 
 	private enum ModelRenderType
 	{
@@ -82,16 +94,28 @@ public class LegendaryTooltipsConfig extends IcebergConfig<LegendaryTooltipsConf
 		ALL
 	}
 
+	private enum TooltipsScrollActive
+	{
+		ALWAYS,
+		WITH_KEYBIND,
+		NEVER
+	}
+
 	public final Supplier<Boolean> nameSeparator;
+	public final Supplier<Boolean> showSeparatorForEmpty;
 	public final Supplier<Boolean> bordersMatchRarity;
 	public final Supplier<Boolean> tooltipShadow;
 	public final Supplier<Boolean> shineEffect;
 	public final Supplier<Boolean> centeredTitle;
 	public final Supplier<Boolean> enforceMinimumWidth;
 	public final Supplier<Boolean> compactTooltips;
-	public final Supplier<ModelRenderType> renderItemModel;
+	private final Supplier<ModelRenderType> renderItemModel;
 	public final Supplier<Double> modelRotationSpeed;
 	public final Supplier<Boolean> fixMC271840;
+	private final Supplier<Integer> maxTooltipWidth;
+	private final Supplier<Integer> maxTooltipHeight;
+	private final Supplier<TooltipsScrollActive> enableTooltipScrolling;
+	public final Supplier<Double> scrollSpeed;
 
 	final TextColor[] startColors = new TextColor[LegendaryTooltips.NUM_FRAMES];
 	final TextColor[] endColors = new TextColor[LegendaryTooltips.NUM_FRAMES];
@@ -110,11 +134,6 @@ public class LegendaryTooltipsConfig extends IcebergConfig<LegendaryTooltipsConf
 	private static final Map<FormattedText, FormattedText> formattedTitleCache = new HashMap<>();
 
 	private static final List<Supplier<Supplier<?>>> colorSuppliers = new ArrayList<>();
-
-	private static final List<String> defaultBlacklist = List.of(
-		"relics:reflection_necklace", "relics:aqua_walker", "relics:holy_locket", "relics:spore_sack", "relics:shadow_glaive",
-		"relics:infinity_ham", "relics:leafy_ring", "relics:phantom_boot", "relics:springy_boot"
-	);
 
 	public LegendaryTooltipsConfig(IIcebergConfigSpecBuilder build)
 	{
@@ -135,15 +154,20 @@ public class LegendaryTooltipsConfig extends IcebergConfig<LegendaryTooltipsConf
 					  "      and the end color is the bottom, with a smooth transition between.  Please read the information above the color section for specifics.").push("client").push("visual_options");
 
 		nameSeparator = build.comment(" Whether item names in tooltips should have a line under them separating them from the rest of the tooltip.").add("name_separator", true);
+		showSeparatorForEmpty = build.comment(" If enabled, the name separator will be shown for all tooltips.  If disabled, it will only be shown for item tooltips.").add("show_separator_for_empty", true);
 		bordersMatchRarity = build.comment(" If enabled, tooltip border colors will match item rarity colors (except for custom borders).").add("borders_match_rarity", true);
 		tooltipShadow = build.comment(" If enabled, tooltips will display a drop shadow.").add("tooltip_shadow", true);
 		shineEffect = build.comment(" If enabled, items showing a custom border will have a special shine effect when hovered over.").add("shine_effect", true);
 		centeredTitle = build.comment(" If enabled, tooltip titles will be drawn centered.").add("centered_title", true);
 		enforceMinimumWidth = build.comment(" If enabled, tooltips with custom borders will always be at least wide enough to display all border decorations.").add("enforce_minimum_width", false);
 		compactTooltips = build.comment(" If enabled, some unnecessary text and spacing will be removed from equipment tooltips.").add("compact_tooltips", true);
-		renderItemModel = build.comment(" Which items should have a 3D model rendered in the tooltip.  If set to \"equipment\", the model will only be rendered for items with durability.").addEnum("render_item_model", ModelRenderType.EQUIPMENT);
+		renderItemModel = build.comment(" Which items should have a 3D model rendered in the tooltip.  If set to \"equipment\", the model will only be rendered for armor, tools, and items with durability.").addEnum("render_item_model", ModelRenderType.EQUIPMENT);
 		modelRotationSpeed = build.comment(" The speed at which 3D models in tooltips will rotate.  Lower values rotate faster, set to 0 to disable rotation.").addInRange("model_rotation_speed", 12.0, 0, 50.0);
 		fixMC271840 = build.comment(" If enabled, fixes a vanilla bug where displayed tooltip damage values are incorrect for weapons with the Sharpness enchantment.").add("fix_mc271840", true);
+		maxTooltipWidth = build.comment(" (EXPERIMENTAL) The maximum width of tooltips.  Set to 0 for no limit.").addInRange("max_tooltip_width", 0, 0, Integer.MAX_VALUE);
+		maxTooltipHeight = build.comment(" (EXPERIMENTAL) The maximum height of tooltips.  Set to 0 for no limit.").addInRange("max_tooltip_height", 0, 0, Integer.MAX_VALUE);
+		enableTooltipScrolling = build.comment(" (EXPERIMENTAL) If enabled, tooltips that are larger than the maximum height specified (or the screen if not specified) will be scrollable with the mouse wheel.").addEnum("enable_tooltip_scrolling", TooltipsScrollActive.NEVER);
+		scrollSpeed = build.comment(" (EXPERIMENTAL) The speed at which tooltips will scroll when scrolling is enabled.").addInRange("scroll_speed", 10.0, 1.0, 50.0);
 
 		build.pop().comment(String.format(" Custom borders are broken into %d \"levels\", with level 0 being intended for the \"best\" or \"rarest\" items. Only level 0 has a custom border built-in, but others can be added with resource packs.", LegendaryTooltips.NUM_FRAMES)).push("custom_borders");
 
@@ -184,7 +208,7 @@ public class LegendaryTooltipsConfig extends IcebergConfig<LegendaryTooltipsConf
 		{
 			itemSelectors.add(build.addListAllowEmpty(String.format("level%d_entries", i), Lists.newArrayList(), e -> Selectors.validateSelector((String)e) ));
 		}
-		blacklist = build.comment(" Enter blacklist selectors here using the same format as above. Any items that match these selectors will NOT show a border.").addListAllowEmpty("blacklist", defaultBlacklist, e -> Selectors.validateSelector((String)e));
+		blacklist = build.comment(" Enter blacklist selectors here using the same format as above. Any items that match these selectors will NOT show a border.").addListAllowEmpty("blacklist", List.of(), e -> Selectors.validateSelector((String)e));
 
 		build.pop().comment(" Set border priorities here.  This should be a list of numbers that correspond to border levels, with numbers coming first being higher priority.\n" +
 							" Optionally, -1 can be inserted to indicate relative priority of data and api-defined borders.  If you don't know what that means, you don't need to worry about it.").push("priorities");
@@ -234,6 +258,55 @@ public class LegendaryTooltipsConfig extends IcebergConfig<LegendaryTooltipsConf
 		build.pop().pop();
 	}
 
+	public static int getMaxTooltipWidth()
+	{
+		int maxWidth = getInstance().maxTooltipWidth.get();
+
+		if (maxWidth == 0)
+		{
+			Minecraft minecraft = Minecraft.getInstance();
+			maxWidth = minecraft.getWindow().getGuiScaledWidth();
+		}
+
+		if (getInstance().enforceMinimumWidth.get() && maxWidth < 48)
+		{
+			maxWidth = 48;
+		}
+
+		return maxWidth;
+	}
+
+	public static int getMaxTooltipHeight()
+	{
+		int maxHeight = getInstance().maxTooltipHeight.get();
+
+		if (maxHeight == 0)
+		{
+			Minecraft minecraft = Minecraft.getInstance();
+			maxHeight = minecraft.getWindow().getGuiScaledHeight();
+		}
+		return maxHeight;
+	}
+
+
+	public static boolean shouldScrollTooltip()
+	{
+		switch (getInstance().enableTooltipScrolling.get())
+		{
+			case ALWAYS:
+				return true;
+			case WITH_KEYBIND:
+				return LegendaryTooltips.scrollTooltipsKeyDown;
+			case NEVER:
+			default:
+				return false;
+		}
+	}
+
+	private static TagKey<Item> armorTag = TagKey.create(Registries.ITEM, ResourceLocation.fromNamespaceAndPath("c", "armors"));
+	private static TagKey<Item> toolsTag = TagKey.create(Registries.ITEM, ResourceLocation.fromNamespaceAndPath("c", "tools"));
+
+
 	public static boolean showModelForItem(ItemStack itemStack)
 	{
 		switch (getInstance().renderItemModel.get())
@@ -244,7 +317,7 @@ public class LegendaryTooltipsConfig extends IcebergConfig<LegendaryTooltipsConf
 			case ALL:
 				return !itemStack.isEmpty();
 			case EQUIPMENT:
-				return !itemStack.isEmpty() && itemStack.isDamageableItem();
+				return !itemStack.isEmpty() && (itemStack.has(DataComponents.MAX_DAMAGE) || itemStack.is(armorTag) || itemStack.is(toolsTag));
 		}
 	}
 
@@ -396,23 +469,90 @@ public class LegendaryTooltipsConfig extends IcebergConfig<LegendaryTooltipsConf
 
 			if (colors instanceof List<?> colorsList)
 			{
-				getInstance().startColors[i] =	getColor(colorsList.size() > 0 ? colorsList.get(0) : null, defaultColors.get(ColorType.BORDER_START), TooltipDecor.DEFAULT_BORDERS, i, ColorType.BORDER_START);
+				getInstance().startColors[i] =		getColor(colorsList.size() > 0 ? colorsList.get(0) : null, defaultColors.get(ColorType.BORDER_START), TooltipDecor.DEFAULT_BORDERS, i, ColorType.BORDER_START);
 				getInstance().endColors[i] =		getColor(colorsList.size() > 1 ? colorsList.get(1) : null, defaultColors.get(ColorType.BORDER_END), TooltipDecor.DEFAULT_BORDERS, i, ColorType.BORDER_END);
 				getInstance().startBGColors[i] =	getColor(colorsList.size() > 2 ? colorsList.get(2) : null, defaultColors.get(ColorType.BG_START), TooltipDecor.DEFAULT_BORDERS, i, ColorType.BG_START);
-				getInstance().endBGColors[i] =	getColor(colorsList.size() > 3 ? colorsList.get(3) : null, defaultColors.get(ColorType.BG_END), TooltipDecor.DEFAULT_BORDERS, i, ColorType.BG_END);
+				getInstance().endBGColors[i] =		getColor(colorsList.size() > 3 ? colorsList.get(3) : null, defaultColors.get(ColorType.BG_END), TooltipDecor.DEFAULT_BORDERS, i, ColorType.BG_END);
 			}
 			else
 			{
-				getInstance().startColors[i] =	defaultColors.get(ColorType.BORDER_START);
+				getInstance().startColors[i] =		defaultColors.get(ColorType.BORDER_START);
 				getInstance().endColors[i] =		defaultColors.get(ColorType.BORDER_END);
 				getInstance().startBGColors[i] =	defaultColors.get(ColorType.BG_START);
-				getInstance().endBGColors[i] =	defaultColors.get(ColorType.BG_END);
+				getInstance().endBGColors[i] =		defaultColors.get(ColorType.BG_END);
 			}
 		}
 	}
 
+	public static FrameDefinition getDefinitionColors(ItemStack item, int defaultStartBorder, int defaultEndBorder, int defaultStartBackground, int defaultEndBackground, HolderLookup.Provider provider)
+	{
+		FrameDefinition result = getInstance().getFrameDefinition(item, provider);
+
+		if (result == NO_BORDER)
+		{
+			result = new FrameDefinition(result.resource(), result.index(), () -> defaultStartBorder, () -> defaultEndBorder, () -> defaultStartBackground, () -> defaultEndBackground, FrameSource.NONE, 0, result.frameWidth(), result.partSize(), result.partOffset(), result.cornerOffset());
+		}
+		else if (result == STANDARD_BORDER)
+		{
+			// If the "match rarity" option is turned on, calculate some good-looking colors.
+			if (getInstance().bordersMatchRarity.get())
+			{
+				// First grab the item's name color.
+				TextColor color = ItemColors.getColorForItem(item, TextColor.fromLegacyFormat(ChatFormatting.WHITE));
+				DynamicColor rarityColor = DynamicColor.fromRgb(color.getValue());
+
+				int hue = rarityColor.hue();
+				boolean addHue = false;
+
+				// These hue ranges are arbitrarily decided.  I just think they look the best.
+				if (hue >= 62 && hue <= 240)
+				{
+					addHue = true;
+				}
+
+				// The start color will hue-shift by 0.6%, and the end will hue-shift the opposite direction by 4%.
+				// This gives a very nice looking gradient, while still matching the name color quite well.
+				int startHue = addHue ? hue - 4 : hue + 4;
+				int endHue = addHue ? hue + 18 : hue - 18;
+				int startBGHue = addHue ? hue - 3 : hue + 3;
+				int endBGHue = addHue ? hue + 13 : hue - 13;
+
+				// Ensure values stay between 0 and 360.
+				startHue = (startHue + 360) % 360;
+				endHue = (endHue + 360) % 360;
+				startBGHue = (startBGHue + 360) % 360;
+				endBGHue = (endBGHue + 360) % 360;
+
+				DynamicColor startColor = DynamicColor.fromAHSV(0xFF, startHue, rarityColor.saturation(), rarityColor.value());
+				DynamicColor endColor = DynamicColor.fromAHSV(0xFF, endHue, rarityColor.saturation(), (int)(rarityColor.value() * 0.95f));
+				DynamicColor startBGColor = DynamicColor.fromAHSV(0xE4, startBGHue, (int)(rarityColor.saturation() * 0.9f), 14);
+				DynamicColor endBGColor = DynamicColor.fromAHSV(0xFD, endBGHue, (int)(rarityColor.saturation() * 0.8f), 18);
+
+				result = new FrameDefinition(result.resource(), result.index(), () -> startColor.getIntValue(), () -> endColor.getIntValue(), () -> startBGColor.getIntValue(), () -> endBGColor.getIntValue(), FrameSource.NONE, 0, result.frameWidth(), result.partSize(), result.partOffset(), result.cornerOffset());
+			}
+		}
+
+		if (result.startBorder() == null)
+		{
+			result = new FrameDefinition(result.resource(), result.index(), () -> defaultStartBorder, result.endBorder(), result.startBackground(), result.endBackground(), FrameSource.NONE, 0, result.frameWidth(), result.partSize(), result.partOffset(), result.cornerOffset());
+		}
+		if (result.endBorder() == null)
+		{
+			result = new FrameDefinition(result.resource(), result.index(), result.startBorder(), () -> defaultEndBorder, result.startBackground(), result.endBackground(), FrameSource.NONE, 0, result.frameWidth(), result.partSize(), result.partOffset(), result.cornerOffset());
+		}
+		if (result.startBackground() == null)
+		{
+			result = new FrameDefinition(result.resource(), result.index(), result.startBorder(), result.endBorder(), () -> defaultStartBackground, result.endBackground(), FrameSource.NONE, 0, result.frameWidth(), result.partSize(), result.partOffset(), result.cornerOffset());
+		}
+		if (result.endBackground() == null)
+		{
+			result = new FrameDefinition(result.resource(), result.index(), result.startBorder(), result.endBorder(), result.startBackground(), () -> defaultEndBackground, FrameSource.NONE, 0, result.frameWidth(), result.partSize(), result.partOffset(), result.cornerOffset());
+		}
+		return result;
+	}
+
 	/**
-	 * Adds a new custom frame definition.  If the same frame definition already exists, 
+	 * Adds a new custom frame definition.  If the same frame definition already exists,
 	 * the provided selectors are added after the already-configured selectors.
 	 */
 	public void addFrameDefinition(ResourceLocation resource, int index, Supplier<Integer> startBorder, Supplier<Integer> endBorder, Supplier<Integer> background, int priority, List<String> selectors)
@@ -484,6 +624,26 @@ public class LegendaryTooltipsConfig extends IcebergConfig<LegendaryTooltipsConf
 				// Add to cache.
 				frameDefinitionCache.put(item, NO_BORDER);
 				return NO_BORDER;
+			}
+		}
+
+		// Now check if this item has an external decoration.
+		if (Services.getPlatformHelper().isModLoaded("relics"))
+		{
+			try
+			{
+				Minecraft minecraft = Minecraft.getInstance();
+				Method hasTooltipDecorMethod = Class.forName("com.anthonyhilyard.legendarytooltips.compat.RelicsHandler").getDeclaredMethod("hasTooltipDecor", ItemStack.class, LocalPlayer.class);
+				if ((boolean)hasTooltipDecorMethod.invoke(null, item, minecraft.player))
+				{
+					// Add to cache.
+					frameDefinitionCache.put(item, NO_BORDER);
+					return NO_BORDER;
+				}
+			}
+			catch (Exception e)
+			{
+				LegendaryTooltips.LOGGER.debug(ExceptionUtils.getStackTrace(e));
 			}
 		}
 

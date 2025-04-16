@@ -35,7 +35,7 @@ public class ItemStackMixin
 		if (LegendaryTooltipsConfig.getInstance().fixMC271840.get() && attributeModifier.is(Item.BASE_ATTACK_DAMAGE_ID))
 		{
 			ItemStack instance = (ItemStack)(Object)this;
-			float f = (float)player.getAttributeValue(Attributes.ATTACK_DAMAGE);
+			float f = (float)player.getAttributeBaseValue(Attributes.ATTACK_DAMAGE);
 			ItemEnchantments itemEnchantments = (ItemEnchantments)instance.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY);
 			for (var entry : itemEnchantments.entrySet())
 			{

@@ -29,21 +29,21 @@ description='''Gives rare items a fancy tooltip and adds additional tooltip conf
 [[dependencies.legendarytooltips]]
 	modId="iceberg"
 	type="required"
-	versionRange="[1.2.14,)"
+	versionRange="[1.3.0,)"
 	ordering="AFTER"
 	side="BOTH"
 
 [[dependencies.legendarytooltips]]
 	modId="prism"
 	type="required"
-	versionRange="[1.0.8,)"
+	versionRange="[1.0.11,)"
 	ordering="AFTER"
 	side="BOTH"
 
 [[dependencies.legendarytooltips]]
 	modId="equipmentcompare"
 	type="optional"
-	versionRange="[1.3.0,)"
+	versionRange="[1.3.13,)"
 	ordering="NONE"
 	side="BOTH"
 

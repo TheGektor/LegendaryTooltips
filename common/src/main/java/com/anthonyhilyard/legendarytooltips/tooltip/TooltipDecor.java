@@ -15,6 +15,10 @@ import java.util.List;
 
 import com.anthonyhilyard.iceberg.util.GuiHelper;
 import com.anthonyhilyard.iceberg.util.Tooltips;
+import com.anthonyhilyard.iceberg.util.Tooltips.TooltipColors;
+import com.anthonyhilyard.iceberg.util.Easing.EasingType;
+import com.anthonyhilyard.iceberg.component.TitleBreakComponent;
+import com.anthonyhilyard.iceberg.util.Easing;
 import com.anthonyhilyard.legendarytooltips.LegendaryTooltips;
 import com.anthonyhilyard.legendarytooltips.config.LegendaryTooltipsConfig;
 import com.anthonyhilyard.legendarytooltips.config.LegendaryTooltipsConfig.FrameDefinition;
@@ -27,32 +31,27 @@ import org.lwjgl.opengl.GL11;
 public class TooltipDecor
 {
 	public static final ResourceLocation DEFAULT_BORDERS = ResourceLocation.fromNamespaceAndPath(LegendaryTooltips.MODID, "textures/gui/tooltip_borders.png");
-	
-	static int currentTooltipBorderStart = 0;
-	static int currentTooltipBorderEnd = 0;
-	static int currentTooltipBackgroundStart = 0;
-	static int currentTooltipBackgroundEnd = 0;
 
-	private static float shineTimer = 2.5f;
+	private static float shineTimer = 1.5f;
 
 	public static void setCurrentTooltipBorderStart(int color)
 	{
-		currentTooltipBorderStart = color;
+		Tooltips.currentColors = new TooltipColors(Tooltips.currentColors.backgroundColorStart(), Tooltips.currentColors.backgroundColorEnd(), color, Tooltips.currentColors.borderColorEnd());
 	}
 
 	public static void setCurrentTooltipBorderEnd(int color)
 	{
-		currentTooltipBorderEnd = color;
+		Tooltips.currentColors = new TooltipColors(Tooltips.currentColors.backgroundColorStart(), Tooltips.currentColors.backgroundColorEnd(), Tooltips.currentColors.borderColorStart(), color);
 	}
 
 	public static void setCurrentTooltipBackgroundStart(int color)
 	{
-		currentTooltipBackgroundStart = color;
+		Tooltips.currentColors = new TooltipColors(color, Tooltips.currentColors.backgroundColorEnd(), Tooltips.currentColors.borderColorStart(), Tooltips.currentColors.borderColorEnd());
 	}
 
 	public static void setCurrentTooltipBackgroundEnd(int color)
 	{
-		currentTooltipBackgroundEnd = color;
+		Tooltips.currentColors = new TooltipColors(Tooltips.currentColors.backgroundColorStart(), color, Tooltips.currentColors.borderColorStart(), Tooltips.currentColors.borderColorEnd());
 	}
 
 	public static void updateTimer(float deltaTime)
@@ -65,7 +64,7 @@ public class TooltipDecor
 
 	public static void resetTimer()
 	{
-		shineTimer = 2.5f;
+		shineTimer = 1.5f;
 	}
 	
 	public static void drawShadow(PoseStack poseStack, int x, int y, int width, int height)
@@ -95,23 +94,19 @@ public class TooltipDecor
 
 	public static void drawBorder(PoseStack poseStack, int x, int y, int width, int height, ItemStack item, List<ClientTooltipComponent> components, Font font, FrameDefinition frameDefinition, boolean comparison, int index)
 	{
-		// If this is a comparison tooltip, we need to draw the actual border lines first.
+		// If this is a comparison tooltip, we need to draw the separator first.
 		if (comparison)
 		{
-			poseStack.pushPose();
-			Matrix4f matrix = poseStack.last().pose();
-			GuiHelper.drawGradientRect(matrix, 400, x - 3, y - 3 + 1, x - 3 + 1, y + height + 3 - 1, currentTooltipBorderStart, currentTooltipBorderEnd);
-			GuiHelper.drawGradientRect(matrix, 400, x + width + 2, y - 3 + 1, x + width + 3, y + height + 3 - 1, currentTooltipBorderStart, currentTooltipBorderEnd);
-			GuiHelper.drawGradientRect(matrix, 400, x - 3, y - 3, x + width + 3, y - 3 + 1, currentTooltipBorderStart, currentTooltipBorderStart);
-			GuiHelper.drawGradientRect(matrix, 400, x - 3, y + height + 2, x + width + 3, y + height + 3, currentTooltipBorderEnd, currentTooltipBorderEnd);
-			poseStack.popPose();
-
 			// Now draw a separator under the "equipped" badge.
-			drawSeparator(poseStack, x - 3 + 1, y - 3 + 1 + 10, width, currentTooltipBorderStart);
+			drawSeparator(poseStack, x - 3 + 1, y - 3 + 1 + 12, width, Tooltips.currentColors.borderColorStart());
+
+			// TODO: Figure out why this is needed...
+			height++;
 		}
 
 		// If the separate name border is enabled, draw it now.
-		if (LegendaryTooltipsConfig.getInstance().nameSeparator.get() && item != null && !item.isEmpty() && frameDefinition.index() != LegendaryTooltips.NO_BORDER)
+		if (LegendaryTooltipsConfig.getInstance().nameSeparator.get() &&
+		   (LegendaryTooltipsConfig.getInstance().showSeparatorForEmpty.get() || !item.isEmpty()))
 		{
 			// Determine the number of "title lines".  This will be the number of lines before the first TitleBreakComponent.
 			// If for some reason there is no TitleBreakComponent, we'll default to 1.
@@ -122,7 +117,7 @@ public class TooltipDecor
 			// Count how many components are not text components, except for (titleLines) count.
 			for (int i = 0; i < components.size(); i++)
 			{
-				if (!(components.get(i) instanceof ClientTextTooltip))
+				if (!(components.get(i) instanceof ClientTextTooltip) && !(components.get(i) instanceof ItemModelComponent))
 				{
 					numComponents--;
 					if (numComponents == titleLines)
@@ -140,9 +135,22 @@ public class TooltipDecor
 				int titleStart = Tooltips.calculateTitleStart(components);
 
 				// If we are displaying a model, adjust the offset for it.
-				if (components.get(0) instanceof ItemModelComponent)
+				if (components.stream().anyMatch(c -> c instanceof ItemModelComponent))
 				{
-					offset += 7;
+					offset -= 2;
+				}
+
+				// If there are any title break components after the title lines, include those in the count.
+				for (int i = titleStart + titleLines; i < components.size(); i++)
+				{
+					if (components.get(i) instanceof TitleBreakComponent)
+					{
+						titleLines++;
+					}
+					else
+					{
+						break;
+					}
 				}
 
 				// Calculate the offset, which is the height of all components before the title plus the height of all title lines.
@@ -163,18 +171,13 @@ public class TooltipDecor
 					}
 				}
 
-				// If this is a comparison tooltip, we need to move the separator down further to the proper position.
-				if (comparison)
-				{
-					offset += 11;
-				}
-
 				// Now draw the separator under the title.
-				drawSeparator(poseStack, x - 3 + 1, y - 3 + 2 + offset, width, currentTooltipBorderStart);
+				drawSeparator(poseStack, x - 3 + 1, y - 3 + 2 + offset, width, Tooltips.currentColors.borderColorStart());
 			}
 		}
 
-		if (frameDefinition.index() == LegendaryTooltips.STANDARD)
+		if (frameDefinition.index() == LegendaryTooltipsConfig.STANDARD_BORDER.index() ||
+			frameDefinition.index() == LegendaryTooltipsConfig.NO_BORDER.index())
 		{
 			return;
 		}
@@ -185,16 +188,19 @@ public class TooltipDecor
 			poseStack.pushPose();
 			Matrix4f matrix = poseStack.last().pose();
 
-			if (shineTimer >= 0.5f && shineTimer <= 2.0f)
+			if (shineTimer >= 0.5f && shineTimer <= 1.5f)
 			{
-				float interval = Mth.clamp(shineTimer - 0.5f, 0.0f, 1.0f);
-				int alpha = (int)(0x99 * interval) << 24;
+				float interval = 1.0f - Mth.clamp((shineTimer - 0.5f) * 2.0f - 0.5f, -0.5f, 1.5f);
+				int alpha = 0x77 << 24;
 
 				int horizontalMin = x - 3;
 				int horizontalMax = x + width + 3;
-				int horizontalInterval = (int)Mth.lerp(interval * interval, horizontalMax, horizontalMin);
-				GuiHelper.drawGradientRectHorizontal(matrix, 400, Math.max(horizontalInterval - 36, horizontalMin), y - 3, Math.min(horizontalInterval, horizontalMax), y - 3 + 1, 0x00FFFFFF, 0x00FFFFFF | alpha);
-				GuiHelper.drawGradientRectHorizontal(matrix, 400, Math.max(horizontalInterval, horizontalMin), y - 3, Math.min(horizontalInterval + 36, horizontalMax), y - 3 + 1, 0x00FFFFFF | alpha, 0x00FFFFFF);
+
+				int left = (int)Easing.Ease(horizontalMin, horizontalMax, Math.clamp(interval - 0.35f, 0.0f, 1.0f), EasingType.Quad);
+				int middle = (int)Easing.Ease(horizontalMin, horizontalMax, Math.clamp(interval, 0.0f, 1.0f), EasingType.Quad);
+				int right = (int)Easing.Ease(horizontalMin, horizontalMax, Math.clamp(interval + 0.35f, 0.0f, 1.0f), EasingType.Quad);
+				GuiHelper.drawGradientRectHorizontal(matrix, 400,   left, y - 3, middle, y - 3 + 1, 0x00FFFFFF, 0x00FFFFFF | alpha);
+				GuiHelper.drawGradientRectHorizontal(matrix, 400, middle, y - 3,  right, y - 3 + 1, 0x00FFFFFF | alpha, 0x00FFFFFF);
 			}
 
 			if (shineTimer <= 1.0f)
@@ -259,6 +265,5 @@ public class TooltipDecor
 		}
 
 		poseStack.popPose();
-
 	}
 }

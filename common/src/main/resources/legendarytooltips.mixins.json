@@ -2,10 +2,15 @@
 	"required": true,
 	"package": "com.anthonyhilyard.legendarytooltips.mixin",
 	"compatibilityLevel": "JAVA_17",
+	"plugin": "com.anthonyhilyard.legendarytooltips.mixin.MixinConfig",
 	"client": [
+		"emi.EmiRenderHelperMixin",
+		"BakedGlyphMixin",
 		"GuiGraphicsMixin",
 		"ItemStackMixin",
-		"MouseHandlerMixin"
+		"KeyboardHandlerMixin",
+		"MouseHandlerMixin",
+		"ScreenMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1
