@@ -1,10 +1,6 @@
 plugins {
 	id 'io.github.goooler.shadow'
-}
-
-architectury {
-	platformSetupLoomIde()
-	fabric()
+	id 'fabric-loom'
 }
 
 loom {
@@ -29,14 +25,20 @@ configurations {
 }
 
 dependencies {
+	minecraft "com.mojang:minecraft:$rootProject.minecraftVersion"
+	mappings loom.officialMojangMappings()
+	
 	modImplementation "net.fabricmc:fabric-loader:$rootProject.fabricLoaderVersion"
 	modImplementation "net.fabricmc.fabric-api:fabric-api:$rootProject.fabricVersion"
 
 	modImplementation "curse.maven:roughlyenoughitems-310111:4622769"
 	modImplementation "curse.maven:justenoughitems-238222:5567930"
+	
+	// Required dependencies - temporarily commented out
+	// modImplementation "curse.maven:iceberg-581998:6305872"
+	// modImplementation "curse.maven:prism-581998:6305872"
 
-	common(project(path: ':common', configuration: 'namedElements')) { transitive false }
-	shadowBundle project(path: ':common', configuration: 'transformProductionFabric')
+	implementation project(':common')
 }
 
 processResources {

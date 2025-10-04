@@ -1,9 +1,5 @@
-architectury {
-	common {
-		clear()
-		add(rootProject.enabledPlatforms.split(','))
-		forgeUsesMojangMappings = true
-	}
+plugins {
+	id 'fabric-loom'
 }
 
 loom {
@@ -11,10 +7,17 @@ loom {
 }
 
 dependencies {
+	minecraft "com.mojang:minecraft:$rootProject.minecraftVersion"
+	mappings loom.officialMojangMappings()
+	
 	// We depend on Fabric Loader here to use the Fabric @Environment annotations,
 	// which get remapped to the correct annotations on each platform.
 	// Do NOT use other classes from Fabric Loader.
 	modImplementation "net.fabricmc:fabric-loader:$rootProject.fabricLoaderVersion"
 	modImplementation "curse.maven:emi-580555:6075447"
 	modImplementation "curse.maven:relics-445274:6305872"
+	
+	// Required dependencies - temporarily commented out
+	// modImplementation "curse.maven:iceberg-581998:6305872"
+	// modImplementation "curse.maven:prism-581998:6305872"
 }
