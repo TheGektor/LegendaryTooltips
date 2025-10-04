@@ -32,6 +32,10 @@ dependencies {
 	modImplementation "net.fabricmc:fabric-loader:$rootProject.fabricLoaderVersion"
 	modImplementation "net.fabricmc.fabric-api:fabric-api:$rootProject.fabricVersion"
 
+	// Required dependencies
+	modApi "maven.modrinth:iceberg:7ITFAyW8"
+	modApi "maven.modrinth:prism-lib:IZHmnX6H"
+
 	modImplementation "curse.maven:roughlyenoughitems-310111:4622769"
 	modImplementation "curse.maven:justenoughitems-238222:5567930"
 
