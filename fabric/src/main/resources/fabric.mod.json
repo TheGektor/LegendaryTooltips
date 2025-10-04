@@ -35,10 +35,10 @@
 	"depends": {
 		"fabricloader": ">=0.16.0",
 		"fabric-api": "*",
-		"minecraft": "1.21.1",
+		"minecraft": "1.21.8",
 		"java": ">=21",
-		"iceberg": ">=1.3.0",
-		"prism": ">=1.0.11"
+		// "iceberg": ">=1.3.0",
+		// "prism": ">=1.0.11"
 	},
 	"suggests": {
 		"equipmentcompare": ">=1.3.0",

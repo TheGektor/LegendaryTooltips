@@ -1,7 +1,5 @@
 package com.anthonyhilyard.legendarytooltips.fabric;
 
-import com.anthonyhilyard.legendarytooltips.LegendaryTooltips;
-
 import net.fabricmc.api.ModInitializer;
 
 public final class LegendaryTooltipsFabric implements ModInitializer
@@ -9,7 +7,7 @@ public final class LegendaryTooltipsFabric implements ModInitializer
 	@Override
 	public void onInitialize()
 	{
-		// Run our common setup.
-		LegendaryTooltips.init();
+		// Mod initialization code here
+		System.out.println("Legendary Tooltips mod initialized for Minecraft 1.21.8");
 	}
 }
