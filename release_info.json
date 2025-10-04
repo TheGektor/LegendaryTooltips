@@ -1,0 +1,26 @@
+{
+  "mod_name": "Legendary Tooltips",
+  "version": "1.5.6",
+  "minecraft_version": "1.21.8",
+  "mod_loader": "Fabric",
+  "fabric_loader_version": ">=0.16.0",
+  "fabric_api_version": "*",
+  "java_version": ">=21",
+  "file_name": "LegendaryTooltips-1.21.8-fabric-1.5.6.jar",
+  "file_size": "3128 bytes",
+  "archive_name": "LegendaryTooltips-1.21.8-v1.5.6-release.tar.gz",
+  "archive_size": "2624 bytes",
+  "description": "Упрощенная версия мода Legendary Tooltips для Minecraft 1.21.8 без зависимостей от Iceberg и Prism",
+  "changes": [
+    "Обновлен до Minecraft 1.21.8",
+    "Обновлен до Fabric Loader 0.16.0", 
+    "Обновлен до Fabric API 0.115.0+1.21.1",
+    "Упрощена архитектура мода для совместимости",
+    "Удалены зависимости от Iceberg и Prism"
+  ],
+  "installation": [
+    "Установите Fabric Loader для Minecraft 1.21.8",
+    "Установите Fabric API",
+    "Поместите файл мода в папку mods"
+  ]
+}
