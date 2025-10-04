@@ -528,7 +528,7 @@ public class LegendaryTooltipsConfig extends IcebergConfig<LegendaryTooltipsConf
 				DynamicColor startBGColor = DynamicColor.fromAHSV(0xE4, startBGHue, (int)(rarityColor.saturation() * 0.9f), 14);
 				DynamicColor endBGColor = DynamicColor.fromAHSV(0xFD, endBGHue, (int)(rarityColor.saturation() * 0.8f), 18);
 
-				result = new FrameDefinition(result.resource(), result.index(), () -> startColor.getIntValue(), () -> endColor.getIntValue(), () -> startBGColor.getIntValue(), () -> endBGColor.getIntValue(), FrameSource.NONE, 0, result.frameWidth(), result.partSize(), result.partOffset(), result.cornerOffset());
+				result = new FrameDefinition(result.resource(), result.index(), () -> startColor.getValue(), () -> endColor.getValue(), () -> startBGColor.getValue(), () -> endBGColor.getValue(), FrameSource.NONE, 0, result.frameWidth(), result.partSize(), result.partOffset(), result.cornerOffset());
 			}
 		}
 
