@@ -2,7 +2,6 @@ architectury {
 	common {
 		clear()
 		add(rootProject.enabledPlatforms.split(','))
-		forgeUsesMojangMappings = true
 	}
 }
 
@@ -15,6 +14,8 @@ dependencies {
 	// which get remapped to the correct annotations on each platform.
 	// Do NOT use other classes from Fabric Loader.
 	modImplementation "net.fabricmc:fabric-loader:$rootProject.fabricLoaderVersion"
-	modImplementation "curse.maven:emi-580555:6075447"
-	modImplementation "curse.maven:relics-445274:6305872"
+	// modImplementation "curse.maven:iceberg-653513:5101612"
+	// modImplementation "curse.maven:prism-541676:5101621"
+	// modImplementation "curse.maven:emi-580555:6075447"
+	// modImplementation "curse.maven:relics-445274:6305872"
 }
