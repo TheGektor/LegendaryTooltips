@@ -1,13 +1,12 @@
 buildscript {
 	repositories {
-		flatDir {
-			dirs '../architectury-loom/build/libs'
-			dirs '../architectury-plugin/build/libs'
-		}
 		mavenCentral()
+		maven { url = 'https://maven.architectury.dev/' }
+		maven { url = 'https://maven.fabricmc.net/' }
+		maven { url = 'https://maven.minecraftforge.net/' }
 	}
 	dependencies {
-		classpath name: 'architectury-loom-1.7.9999'
+		classpath "dev.architectury:architectury-loom:0.0.0"
 		classpath "org.ow2.asm:asm:9.6"
 		classpath "org.ow2.asm:asm-analysis:9.6"
 		classpath "org.ow2.asm:asm-commons:9.6"
@@ -33,7 +32,7 @@ buildscript {
 		classpath "com.mojang:datafixerupper:6.0.8"
 		classpath "dev.architectury:at:1.0.1"
 
-		classpath name: 'architectury-plugin-3.4.9999'
+		classpath "dev.architectury:architectury-plugin:0.0.0"
 		classpath "dev.architectury:architectury-transformer:5.2.86"
 		classpath "gradle.plugin.org.jetbrains.gradle.plugin.idea-ext:gradle-idea-ext:0.10"
 	}
