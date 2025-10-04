@@ -1,13 +1,10 @@
-architectury {
-	common {
-		clear()
-		add(rootProject.enabledPlatforms.split(','))
-		forgeUsesMojangMappings = true
-	}
+plugins {
+	id 'java-library'
 }
 
-loom {
-	accessWidenerPath = file("src/main/resources/legendarytooltips.accesswidener")
+java {
+	sourceCompatibility = JavaVersion.VERSION_21
+	targetCompatibility = JavaVersion.VERSION_21
 }
 
 dependencies {
@@ -15,6 +12,8 @@ dependencies {
 	// which get remapped to the correct annotations on each platform.
 	// Do NOT use other classes from Fabric Loader.
 	modImplementation "net.fabricmc:fabric-loader:$rootProject.fabricLoaderVersion"
+	// modImplementation "curse.maven:iceberg-564858:5967424"
+	// modImplementation "curse.maven:prism-682552:5967425"
 	modImplementation "curse.maven:emi-580555:6075447"
 	modImplementation "curse.maven:relics-445274:6305872"
 }
